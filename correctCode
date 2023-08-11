@@ -1,0 +1,72 @@
+`timescale 1ns/1ns
+
+module halfadder(
+  input a, b,
+  output reg sum, cout);
+  always @ (*) begin
+    sum = a ^ b;
+    cout = a & b;
+  end
+endmodule
+
+module fulladder(
+  input a, b, c,
+  output reg s, cout);
+  always @ (*) begin
+    s = a ^ (b ^ c);
+    cout = (a & b) | (c & (a ^ b));
+  end
+endmodule
+
+module threebit(
+  input [2:0] a, b, 
+  output reg [2:0] s, 
+  output reg cout); 
+  reg c0, c1;
+  
+  // Corrected: Moved module instantiation outside of always block
+  halfadder ha1(.a(a[0]), .b(b[0]), .sum(s[0]), .cout(c0));
+  fulladder fa1(.a(a[1]), .b(b[1]), .c(c0), .s(s[1]), .cout(c1)); // Corrected port names
+  fulladder fa2(.a(a[2]), .b(b[2]), .c(c1), .s(s[2]), .cout(cout)); // Corrected port names
+  
+  always @ (a, b) begin 
+    // No need for module instantiation here
+  end 
+endmodule
+
+`timescale 1ns/1ns
+
+module threebittb();
+  reg [2:0] a;
+  reg [2:0] b;
+  wire [2:0] sum;
+  wire cout;
+  
+  threebit thrbit(.a(a), .b(b), .s(sum), .cout(cout));
+
+  initial begin
+    $dumpfile("dump.vcd");
+    $dumpvars(1,threebittb);
+    
+    // Corrected: Moved initialization inside the procedural block
+    a = 3'd0;
+    b = 3'd0;
+    
+    a = 6;
+    b = 1;
+    #10
+    $display("a = %d, b = %d, sum = %d, cout = %d", a, b, sum, cout);
+    
+    a = 2;
+    b = 3;
+    #10
+    $display("a = %d, b = %d, sum = %d, cout = %d", a, b, sum, cout);
+    
+    a = 5;
+    b = 4;
+    #10
+    $display("a = %d, b = %d, sum = %d, cout = %d", a, b, sum, cout);
+    
+    $finish;
+  end
+endmodule
